@@ -2,6 +2,14 @@
 
 This controller puts kubernetes events to CloudWatch Logs.
 
+
+## Setting
+
+You can set environment values.
+* CW_LOG_GROUP_NAME: CloudWatch Logs group name (default - /kubernetes/event-log-group)
+* CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - kubernetes-event-log-stream)
+* AWS_REGION: region (default - ap-northeast-1)
+
 ## How to deploy 
 ```
 make docker-build docker-push IMG=<registry>/<project-name>:tag

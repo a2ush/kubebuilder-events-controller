@@ -26,12 +26,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	cloudwatchlogs "github.com/a2ush/kubebuilder-events-controller/output"
 )
 
 // EventReconciler reconciles a Event object
 type EventReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	CWClient *cloudwatchlogs.CloudWatchLogs
 }
 
 //+kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
@@ -61,6 +64,22 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
+	// Get the Foo resource with this namespace/name
+	r.CWClient.PutLogEvents(event)
+	//https://github.com/hiraken-w/event-cwl-exporter/blob/df1f9ba9ba2b945fd23c336cad9d9e4f7e967866/internal/output/cloudwatchlogs.go
+	//ここを参照して、ラッパーする必要あり。
+
+	/*
+		ObjectMeta.UID:
+		InvolvedObject.Namespace
+		InvolvedObject.Name
+		InvolvedObject.UID
+		Reason:
+		Message:
+		FirstTimestamp:
+		Source.Component:
+		Source.Host:
+	*/
 	instance := event.DeepCopy()
 	fmt.Printf(
 		"new event :\n ObjectMeta.UID: %v\n InvolvedObject.Namespace: %v\n InvolvedObject.Name: %v\n InvolvedObject.UID: %v\n Reason: %v\n Message: %v\n FirstTimestamp: %v\n Source.Component: %v\n Source.Host: %v\n",
@@ -73,37 +92,6 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		instance.FirstTimestamp,
 		instance.Source.Component,
 		instance.Source.Host)
-
-	// fmt.Printf("new event :\n",
-	// 	"ObjectMeta.UID: %v\n",
-	// 	"InvolvedObject.Namespace: %v\n",
-	// 	"InvolvedObject.Name: %v\n",
-	// 	"InvolvedObject.UID: %v\n",
-	// 	"Reason: %v\n",
-	// 	"Message: %v\n",
-	// 	"FirstTimestamp: %v\n",
-	// 	"Source.Component: %v\n",
-	// 	"Source.Host: %v\n",
-	// 	instance.ObjectMeta.UID,
-	// 	instance.InvolvedObject.Namespace,
-	// 	instance.InvolvedObject.Name,
-	// 	instance.InvolvedObject.UID,
-	// 	instance.Reason,
-	// 	instance.Message,
-	// 	instance.FirstTimestamp,
-	// 	instance.Source.Component,
-	// 	instance.Source.Host)
-	/*
-		ObjectMeta.UID:
-		InvolvedObject.Namespace
-		InvolvedObject.Name
-		InvolvedObject.UID
-		Reason:
-		Message:
-		FirstTimestamp:
-		Source.Component:
-		Source.Host:
-	*/
 
 	return ctrl.Result{}, nil
 
