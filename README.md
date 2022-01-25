@@ -8,6 +8,7 @@ $ kubectl get event -A
 NAMESPACE     LAST SEEN   TYPE      REASON             OBJECT                         MESSAGE
 kube-system   100s        Warning   FailedScheduling   pod/coredns-659f9d44fd-gnk2v   no nodes available to schedule pods
 kube-system   2m10s       Warning   FailedScheduling   pod/coredns-659f9d44fd-lsjhs   no nodes available to schedule pods
+...
 ```
 
 In CloudWatch Logs
@@ -20,8 +21,10 @@ You can set environment values.
 * CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - `kubernetes-event-log-stream`)
 * AWS_REGION: region (default - `ap-northeast-1`)
 
-## How to deploy 
+## How to deploy this controller as a pod in your cluster
 ```
+$ git clone https://github.com/a2ush/kubebuilder-events-controller.git
+$ cd kubebuilder-events-controller
 $ make docker-build docker-push IMG=<registry>/<project-name>:tag
 $ make deploy IMG=<registry>/<project-name>:tag
 ```
@@ -39,8 +42,7 @@ $ make docker-build docker-push IMG=111122223333.dkr.ecr.ap-northeast-1.amazonaw
 $ make deploy IMG=111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/kubebuilder-events-controller:latest
 ```
 
-
-## Environment
+Environment
 ```
 $ kubectl get all -n kubebuilder-events-controller-system 
 NAME                                                                  READY   STATUS    RESTARTS   AGE
@@ -54,4 +56,12 @@ deployment.apps/kubebuilder-events-controller-controller-manager   1/1     1    
 
 NAME                                                                          DESIRED   CURRENT   READY   AGE
 replicaset.apps/kubebuilder-events-controller-controller-manager-5665ff5695   1         1         1       17m
+```
+
+## How to test without deploying
+```
+$ git clone https://github.com/a2ush/kubebuilder-events-controller.git
+$ cd kubebuilder-events-controller
+$ make
+$ make run
 ```

@@ -80,7 +80,7 @@ func main() {
 	if err = (&controllers.EventReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		CWClient: cloudwatchlogs.NewCloudWatchLogs(getLogGroupName(), getLogStreamName(), getRegionName()),
+		CWClient: cloudwatchlogs.NewCloudWatchLogs(cloudwatchlogs.GetLogGroupName(), cloudwatchlogs.GetLogStreamName(), cloudwatchlogs.GetRegionName()),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Event")
 		os.Exit(1)
@@ -101,28 +101,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-func getLogGroupName() string {
-	logGroupName, found := os.LookupEnv("CW_LOG_GROUP_NAME")
-	if !found {
-		logGroupName = "/kubernetes/event-log-group"
-	}
-	return logGroupName
-}
-
-func getLogStreamName() string {
-	logStreamName, found := os.LookupEnv("CW_LOG_STREAM_NAME")
-	if !found {
-		logStreamName = "kubernetes-event-log-stream"
-	}
-	return logStreamName
-}
-
-func getRegionName() string {
-	regionName, found := os.LookupEnv("AWS_REGION")
-	if !found {
-		regionName = "ap-northeast-1"
-	}
-	return regionName
 }

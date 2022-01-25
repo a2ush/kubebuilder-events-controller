@@ -5,6 +5,7 @@ package cloudwatchlogs
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -39,8 +40,19 @@ func NewCloudWatchLogs(logGroupName, logStreamName, regionName string) *CloudWat
 			}
 		}
 	}
+
 	logStreamInput := cwl.CreateLogStreamInput{LogGroupName: &logGroupName, LogStreamName: &logStreamName}
 	_, err = client.CreateLogStream(&logStreamInput)
+	if err != nil {
+		if awserr, ok := err.(awserr.Error); ok {
+			switch awserr.Code() {
+			case "ResourceAlreadyExistsException":
+				log.Printf("%s, but this is not error. Use the existing log stream.\n", awserr.Message())
+			default:
+				log.Fatal(awserr.Message())
+			}
+		}
+	}
 
 	log.Printf("Put to %s/%s in %s", logGroupName, logStreamName, regionName)
 
@@ -111,4 +123,28 @@ func translateTimestamp(timestamp metav1.Time) int64 {
 	}
 
 	return timestamp.UnixNano() / 1000000
+}
+
+func GetLogGroupName() string {
+	logGroupName, found := os.LookupEnv("CW_LOG_GROUP_NAME")
+	if !found {
+		logGroupName = "/kubernetes/event-log-group"
+	}
+	return logGroupName
+}
+
+func GetLogStreamName() string {
+	logStreamName, found := os.LookupEnv("CW_LOG_STREAM_NAME")
+	if !found {
+		logStreamName = "kubernetes-event-log-stream"
+	}
+	return logStreamName
+}
+
+func GetRegionName() string {
+	regionName, found := os.LookupEnv("AWS_REGION")
+	if !found {
+		regionName = "ap-northeast-1"
+	}
+	return regionName
 }
