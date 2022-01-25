@@ -2,6 +2,16 @@
 
 This controller puts kubernetes events to CloudWatch Logs.
 
+On Terminal
+```
+$ kubectl get event -A
+NAMESPACE     LAST SEEN   TYPE      REASON             OBJECT                         MESSAGE
+kube-system   100s        Warning   FailedScheduling   pod/coredns-659f9d44fd-gnk2v   no nodes available to schedule pods
+kube-system   2m10s       Warning   FailedScheduling   pod/coredns-659f9d44fd-lsjhs   no nodes available to schedule pods
+```
+
+In CloudWatch Logs
+![image](images/console.png)
 
 ## Setting
 
