@@ -6,16 +6,31 @@ This controller puts kubernetes events to CloudWatch Logs.
 ## Setting
 
 You can set environment values.
-* CW_LOG_GROUP_NAME: CloudWatch Logs group name (default - /kubernetes/event-log-group)
-* CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - kubernetes-event-log-stream)
-* AWS_REGION: region (default - ap-northeast-1)
+* CW_LOG_GROUP_NAME: CloudWatch Logs group name (default - `/kubernetes/event-log-group`)
+* CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - `kubernetes-event-log-stream`)
+* AWS_REGION: region (default - `ap-northeast-1`)
 
 ## How to deploy 
 ```
-make docker-build docker-push IMG=<registry>/<project-name>:tag
-make deploy IMG=<registry>/<project-name>:tag
+$ make docker-build docker-push IMG=<registry>/<project-name>:tag
+$ make deploy IMG=<registry>/<project-name>:tag
 ```
 
+Ex)
+```
+$ kubectl version --short
+Client Version: v1.20.4-eks-6b7464
+Server Version: v1.21.5-eks-bc4871b
+
+$ aws ecr create-repository --repository-name kubebuilder-events-controller
+$ aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 111122223333.dkr.ecr.ap-northeast-1.amazonaws.com
+
+$ make docker-build docker-push IMG=111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/kubebuilder-events-controller:latest
+$ make deploy IMG=111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/kubebuilder-events-controller:latest
+```
+
+
+## Environment
 ```
 $ kubectl get all -n kubebuilder-events-controller-system 
 NAME                                                                  READY   STATUS    RESTARTS   AGE
