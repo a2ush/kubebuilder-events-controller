@@ -16,7 +16,17 @@ In CloudWatch Logs
 
 ## Setting
 
-You can set environment values.
+You can set environment values. [[manifest]](config/manager/manager.yaml)
+```
+        env:
+        - name: CW_LOG_GROUP_NAME
+          value: "/kubernetes/event-log-group"
+          name: CW_LOG_STREAM_NAME
+          value: "kubernetes-event-log-stream"          
+          name: AWS_REGION
+          value: "ap-northeast-1"      
+```
+
 * CW_LOG_GROUP_NAME: CloudWatch Logs group name (default - `/kubernetes/event-log-group`)
 * CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - `kubernetes-event-log-stream`)
 * AWS_REGION: region (default - `ap-northeast-1`)
