@@ -2,7 +2,9 @@
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.23
+ENVTEST_K8S_VERSION = 1.21
+# AWS Account ID
+AWS_ACCOUNT_ID ?= "111122223333"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -93,6 +95,13 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	if [ ${AWS_ACCOUNT_ID} = "111122223333" ]; then \
+		echo "IRSA is not used. kubebuilder-events-controller uses the node IAM role."; \
+	else \
+		echo "kubebuilder-events-controller uses IRSA."; \
+		echo "  annotations:" >> config/rbac/service_account.yaml; \
+		echo "    eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/kubebuilder-events-controller" | sed -e 's/<ACCOUNT_ID>/${AWS_ACCOUNT_ID}/g' >> config/rbac/service_account.yaml; \
+	fi
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
