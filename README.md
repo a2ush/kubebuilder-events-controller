@@ -31,12 +31,35 @@ You can set environment values. [[manifest]](config/manager/manager.yaml)
 * CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - `kubernetes-event-log-stream`)
 * AWS_REGION: region (default - `ap-northeast-1`)
 
+And when you want to use IRSA, you should perform the following command.
+```
+$ ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+$ OIDC_PROVIDER=$(aws eks describe-cluster --name cluster-name --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
+$ aws iam create-role --role-name IAM_ROLE_NAME --assume-role-policy-document file://trust.json --description "IAM_ROLE_DESCRIPTION"
+``` 
+
+
 ## How to deploy this controller as a pod in your cluster
 ```
 $ git clone https://github.com/a2ush/kubebuilder-events-controller.git
 $ cd kubebuilder-events-controller
 $ make docker-build docker-push IMG=<registry>/<project-name>:tag
 $ make deploy IMG=<registry>/<project-name>:tag
+```
+
+If you want to use IRSA, you should perform the following command.
+```
+$ git clone https://github.com/a2ush/kubebuilder-events-controller.git
+$ cd kubebuilder-events-controller
+$ make docker-build docker-push IMG=<registry>/<project-name>:tag
+
+$ ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+$ OIDC_PROVIDER=$(aws eks describe-cluster --name cluster-name --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
+$ sed -i -e "s/<ACCOUNT_ID>/$ACCOUNT_ID/" -e "s|<OIDC_PROVIDER>|${OIDC_PROVIDER}|" irsa/trust.json 
+$ aws iam create-role --role-name kubebuilder-events-controller --assume-role-policy-document file://irsa/trust.json --description "For kubebuilder-events-controller role"
+$ aws iam attach-role-policy --role-name kubebuilder-events-controller --policy-arn=arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+$ make deploy IMG=<registry>/<project-name>:tag AWS_ACCOUNT_ID=${ACCOUNT_ID}
 ```
 
 Ex)
