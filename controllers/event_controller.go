@@ -18,8 +18,8 @@ package controllers
 
 import (
 	"context"
+	"log"
 
-	"github.com/labstack/gommon/log"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -57,10 +57,11 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 	if err != nil {
-		log.Error(err, "unable to get Event", "name", req.NamespacedName)
+		log.Println(err, "unable to get Event", "name", req.NamespacedName)
 		return ctrl.Result{}, err
 	}
 
+	log.Println("Send events to CloudWatch logs")
 	r.CWClient.PutLogEvents(event)
 
 	// /*

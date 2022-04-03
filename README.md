@@ -5,13 +5,16 @@ This controller puts kubernetes events to CloudWatch Logs.
 On Terminal
 ```
 $ kubectl get event -A
-NAMESPACE     LAST SEEN   TYPE      REASON             OBJECT                         MESSAGE
-kube-system   100s        Warning   FailedScheduling   pod/coredns-659f9d44fd-gnk2v   no nodes available to schedule pods
-kube-system   2m10s       Warning   FailedScheduling   pod/coredns-659f9d44fd-lsjhs   no nodes available to schedule pods
+NAMESPACE     LAST SEEN   TYPE      REASON                 OBJECT                                     MESSAGE
+default       10s         Normal    Scheduled              pod/nginx                                  Successfully assigned default/nginx to ip-192-168-2-12.ap-northeast-1.compute.internal
+default       9s          Normal    Pulling                pod/nginx                                  Pulling image "nginx"
+default       7s          Normal    Pulled                 pod/nginx                                  Successfully pulled image "nginx" in 1.848090687s
+default       7s          Normal    Created                pod/nginx                                  Created container nginx
+default       7s          Normal    Started                pod/nginx                                  Started container nginx
 ...
 ```
 
-In CloudWatch Logs
+CloudWatch Logs
 ![image](images/console.png)
 
 ## Setting
@@ -31,14 +34,6 @@ You can set environment values. [[manifest]](config/manager/manager.yaml)
 * CW_LOG_STREAM_NAME: CloudWatch Logs stream name (default - `kubernetes-event-log-stream`)
 * AWS_REGION: region (default - `ap-northeast-1`)
 
-And when you want to use IRSA, you should perform the following command.
-```
-$ ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-$ OIDC_PROVIDER=$(aws eks describe-cluster --name cluster-name --query "cluster.identity.oidc.issuer" --output text | sed -e "s/^https:\/\///")
-$ aws iam create-role --role-name IAM_ROLE_NAME --assume-role-policy-document file://trust.json --description "IAM_ROLE_DESCRIPTION"
-``` 
-
-
 ## How to deploy this controller as a pod in your cluster
 ```
 $ git clone https://github.com/a2ush/kubebuilder-events-controller.git
@@ -46,8 +41,9 @@ $ cd kubebuilder-events-controller
 $ make docker-build docker-push IMG=<registry>/<project-name>:tag
 $ make deploy IMG=<registry>/<project-name>:tag
 ```
+You need to add `arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy` to node IAM role when you don't use IRSA.
 
-If you want to use IRSA, you should perform the following command.
+If you want to use IRSA, you can perform the following command.
 ```
 $ git clone https://github.com/a2ush/kubebuilder-events-controller.git
 $ cd kubebuilder-events-controller
@@ -60,19 +56,6 @@ $ aws iam create-role --role-name kubebuilder-events-controller --assume-role-po
 $ aws iam attach-role-policy --role-name kubebuilder-events-controller --policy-arn=arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
 
 $ make deploy IMG=<registry>/<project-name>:tag AWS_ACCOUNT_ID=${ACCOUNT_ID}
-```
-
-Ex)
-```
-$ kubectl version --short
-Client Version: v1.20.4-eks-6b7464
-Server Version: v1.21.5-eks-bc4871b
-
-$ aws ecr create-repository --repository-name kubebuilder-events-controller
-$ aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 111122223333.dkr.ecr.ap-northeast-1.amazonaws.com
-
-$ make docker-build docker-push IMG=111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/kubebuilder-events-controller:latest
-$ make deploy IMG=111122223333.dkr.ecr.ap-northeast-1.amazonaws.com/kubebuilder-events-controller:latest
 ```
 
 Environment
